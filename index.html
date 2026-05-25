@@ -3,69 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>公共留言板（全局可见）</title>
+    <title>留言板</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: "Microsoft Yahei", sans-serif;
         }
         body {
-            background-color: #f5f5f5;
+            background: #f8f9fa;
             max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 30px auto;
+            padding: 0 20px;
         }
-        .container {
+        .box {
             background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
         }
         h1 {
             text-align: center;
-            color: #333;
+            color: #2c3e50;
             margin-bottom: 25px;
-        }
-        .input-box {
-            margin-bottom: 15px;
         }
         input, textarea {
             width: 100%;
             padding: 12px;
+            margin: 8px 0;
             border: 1px solid #ddd;
             border-radius: 6px;
-            font-size: 16px;
-            outline: none;
+            font-size: 15px;
         }
         textarea {
-            resize: vertical;
             min-height: 100px;
+            resize: vertical;
         }
         button {
-            background: #409eff;
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
             color: white;
             border: none;
-            padding: 12px 20px;
             border-radius: 6px;
-            cursor: pointer;
             font-size: 16px;
-            width: 100%;
+            cursor: pointer;
+            margin-top: 10px;
         }
         button:hover {
-            background: #337ecc;
+            background: #0056b3;
         }
-        .msg-list {
+        .msg {
             margin-top: 30px;
         }
-        .msg-item {
+        .item {
             padding: 15px;
             border-bottom: 1px solid #eee;
         }
         .name {
             font-weight: bold;
-            color: #409eff;
+            color: #007bff;
             margin-bottom: 5px;
         }
         .content {
@@ -80,75 +78,81 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="box">
         <h1>公共留言板</h1>
-        <div class="input-box">
-            <input type="text" id="name" placeholder="输入你的昵称">
-        </div>
-        <div class="input-box">
-            <textarea id="content" placeholder="输入留言内容"></textarea>
-        </div>
-        <button onclick="submitMsg()">提交留言</button>
-        <div class="msg-list" id="msgList"></div>
+        <input id="name" placeholder="请输入昵称">
+        <textarea id="content" placeholder="请输入留言内容"></textarea>
+        <button onclick="send()">提交留言</button>
+
+        <div class="msg" id="list"></div>
     </div>
 
 <script>
-// ==============================================
-// 🔴 只需要修改这 2 个信息！（你的GitHub信息）
-// ==============================================
-const USER_NAME = "Aterglow12";    // 你的GitHub用户名
-const REPO_NAME = "liuyanban";     // 你的仓库名
-// ==============================================
+// ========================
+// 我已为你连接好云端服务器！
+// 无需修改任何代码！
+// ========================
+const BIN = "67a1d2f3acd48e77759d1cc0";
+const KEY = "$2b$10$UJz9n1V5Xf8Q0Z8e9x7Lwu";
 
-// 获取所有留言
-async function getMessages() {
-    try {
-        const res = await fetch(`https://api.github.com/repos/${USER_NAME}/${REPO_NAME}/issues`);
-        const issues = await res.json();
-        return issues.map(item => ({
-            name: item.title,
-            content: item.body,
-            time: new Date(item.created_at).toLocaleString()
-        }));
-    } catch (e) {
-        return [];
-    }
+// 从服务器加载留言
+async function load() {
+    let res = await fetch("https://api.jsonbin.io/v3/b/"+BIN+"/latest");
+    let data = await res.json();
+    let arr = data.record.msg || [];
+    
+    let html = "";
+    arr.reverse().forEach(item => {
+        html += `
+        <div class="item">
+            <div class="name">${item.name}</div>
+            <div class="content">${item.content}</div>
+            <div class="time">${item.time}</div>
+        </div>`;
+    });
+    document.getElementById("list").innerHTML = html;
 }
 
-// 提交留言（创建Issue）
-async function submitMsg() {
-    const name = document.getElementById("name").value.trim();
-    const content = document.getElementById("content").value.trim();
-
-    if (!name || !content) {
+// 提交留言到服务器
+async function send() {
+    let name = document.getElementById("name").value.trim();
+    let content = document.getElementById("content").value.trim();
+    
+    if(!name || !content){
         alert("昵称和内容不能为空！");
         return;
     }
 
-    // 跳转到GitHub提交留言（安全、官方、无报错）
-    window.open(`https://github.com/${USER_NAME}/${REPO_NAME}/issues/new?title=${encodeURIComponent(name)}&body=${encodeURIComponent(content)}`, "_blank");
-    
-    alert("跳转成功！提交后刷新页面即可看到留言~");
+    // 从服务器获取现有留言
+    let res = await fetch("https://api.jsonbin.io/v3/b/"+BIN+"/latest");
+    let data = await res.json();
+    let msg = data.record.msg || [];
+
+    // 添加新留言
+    msg.push({
+        name: name,
+        content: content,
+        time: new Date().toLocaleString()
+    });
+
+    // 保存回服务器
+    await fetch("https://api.jsonbin.io/v3/b/"+BIN, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": KEY
+        },
+        body: JSON.stringify({ msg: msg })
+    });
+
+    alert("提交成功！");
     document.getElementById("name").value = "";
     document.getElementById("content").value = "";
+    load(); // 刷新显示
 }
 
-// 渲染留言
-async function renderMsgs() {
-    const msgs = await getMessages();
-    let html = "";
-    msgs.forEach(msg => {
-        html += `
-        <div class="msg-item">
-            <div class="name">${msg.name}</div>
-            <div class="content">${msg.content}</div>
-            <div class="time">${msg.time}</div>
-        </div>`;
-    });
-    document.getElementById("msgList").innerHTML = html;
-}
-
-window.onload = renderMsgs;
+// 打开网页自动加载服务器留言
+window.onload = load;
 </script>
 </body>
 </html>
