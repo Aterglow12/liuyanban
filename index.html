@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>简易留言板</title>
+    <title>公共留言板（所有人可见）</title>
     <style>
         * {
             margin: 0;
@@ -11,31 +11,26 @@
             box-sizing: border-box;
             font-family: Arial, sans-serif;
         }
-
         body {
             background-color: #f5f5f5;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
         }
-
         .container {
             background: white;
             padding: 25px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-
         h1 {
             text-align: center;
             color: #333;
             margin-bottom: 25px;
         }
-
         .input-box {
             margin-bottom: 15px;
         }
-
         input, textarea {
             width: 100%;
             padding: 12px;
@@ -44,12 +39,10 @@
             font-size: 16px;
             outline: none;
         }
-
         textarea {
             resize: vertical;
             min-height: 100px;
         }
-
         button {
             background: #409eff;
             color: white;
@@ -60,117 +53,112 @@
             font-size: 16px;
             width: 100%;
         }
-
         button:hover {
             background: #337ecc;
         }
-
         .msg-list {
             margin-top: 30px;
         }
-
         .msg-item {
             padding: 15px;
             border-bottom: 1px solid #eee;
         }
-
         .name {
             font-weight: bold;
             color: #409eff;
             margin-bottom: 5px;
         }
-
         .content {
             color: #333;
             line-height: 1.5;
-            margin-bottom: 5px;
         }
-
         .time {
             font-size: 12px;
             color: #999;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>简易留言板</h1>
-        
+        <h1>公共留言板</h1>
         <div class="input-box">
-            <input type="text" id="name" placeholder="请输入你的昵称">
+            <input type="text" id="name" placeholder="输入你的昵称">
         </div>
-        
         <div class="input-box">
-            <textarea id="content" placeholder="请输入留言内容"></textarea>
+            <textarea id="content" placeholder="输入留言内容"></textarea>
         </div>
-        
         <button onclick="submitMsg()">提交留言</button>
-        
         <div class="msg-list" id="msgList"></div>
     </div>
 
-    <script>
-        // 本地存储留言板（所有人可见，永久保存，不需要任何第三方服务）
-        function getMsgs() {
-            let msgs = localStorage.getItem("liuyanban");
-            return msgs ? JSON.parse(msgs) : [];
-        }
+<script>
+// 云端公共存储（所有人可见）
+const BIN_ID = "66f8c1a3e7253d73917f1234";
+const API_KEY = "$2b$10$YOUR_API_KEY";
 
-        function saveMsgs(msgs) {
-            localStorage.setItem("liuyanban", JSON.stringify(msgs));
-        }
+// 获取留言
+async function getMessages() {
+    try {
+        let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`);
+        let data = await res.json();
+        return data.record.messages || [];
+    } catch (e) {
+        return [];
+    }
+}
 
-        function renderMsgs() {
-            let list = getMsgs();
-            let html = "";
-            for (let i = list.length - 1; i >= 0; i--) {
-                let msg = list[i];
-                html += `
-                <div class="msg-item">
-                    <div class="name">${msg.name}</div>
-                    <div class="content">${msg.content}</div>
-                    <div class="time">${msg.time}</div>
-                </div>
-                `;
-            }
-            document.getElementById("msgList").innerHTML = html;
-        }
+// 保存留言
+async function saveMessages(messages) {
+    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": API_KEY
+        },
+        body: JSON.stringify({ messages })
+    });
+}
 
-        function submitMsg() {
-            let name = document.getElementById("name").value.trim();
-            let content = document.getElementById("content").value.trim();
-            
-            if (!name || !content) {
-                alert("昵称和留言内容都不能为空！");
-                return;
-            }
+// 渲染页面
+async function render() {
+    let list = await getMessages();
+    let html = "";
+    list.reverse().forEach(item => {
+        html += `
+        <div class="msg-item">
+            <div class="name">${item.name}</div>
+            <div class="content">${item.content}</div>
+            <div class="time">${item.time}</div>
+        </div>`;
+    });
+    document.getElementById("msgList").innerHTML = html;
+}
 
-            let now = new Date();
-            let time = now.getFullYear() + "-" + 
-                      (now.getMonth() + 1) + "-" + 
-                      now.getDate() + " " + 
-                      now.getHours() + ":" + 
-                      now.getMinutes();
+// 提交留言
+async function submitMsg() {
+    let name = document.getElementById("name").value.trim();
+    let content = document.getElementById("content").value.trim();
+    
+    if (!name || !content) {
+        alert("昵称和内容不能为空！");
+        return;
+    }
 
-            let newMsg = {
-                name: name,
-                content: content,
-                time: time
-            };
+    let time = new Date().toLocaleString();
+    let msg = { name, content, time };
+    
+    let messages = await getMessages();
+    messages.push(msg);
+    await saveMessages(messages);
+    
+    alert("提交成功！所有人都能看到啦");
+    document.getElementById("name").value = "";
+    document.getElementById("content").value = "";
+    render();
+}
 
-            let msgs = getMsgs();
-            msgs.push(newMsg);
-            saveMsgs(msgs);
-            
-            document.getElementById("name").value = "";
-            document.getElementById("content").value = "";
-            
-            alert("留言提交成功！");
-            renderMsgs();
-        }
-
-        // 页面加载时显示留言
-        window.onload = renderMsgs;
-    </script>
+window.onload = render;
+</script>
 </body>
 </html>
