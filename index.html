@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>留言板</title>
+    <title>公共留言板（全局可见）</title>
     <style>
         * {
             margin: 0;
@@ -93,72 +93,62 @@
     </div>
 
 <script>
-// 云端公共存储（所有人可见）
-const BIN_ID = "66f8c1a3e7253d73917f1234";
-const API_KEY = "$2b$10$YOUR_API_KEY";
+// ==============================================
+// 🔴 只需要修改这 2 个信息！（你的GitHub信息）
+// ==============================================
+const USER_NAME = "Aterglow12";    // 你的GitHub用户名
+const REPO_NAME = "liuyanban";     // 你的仓库名
+// ==============================================
 
-// 获取留言
+// 获取所有留言
 async function getMessages() {
     try {
-        let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`);
-        let data = await res.json();
-        return data.record.messages || [];
+        const res = await fetch(`https://api.github.com/repos/${USER_NAME}/${REPO_NAME}/issues`);
+        const issues = await res.json();
+        return issues.map(item => ({
+            name: item.title,
+            content: item.body,
+            time: new Date(item.created_at).toLocaleString()
+        }));
     } catch (e) {
         return [];
     }
 }
 
-// 保存留言
-async function saveMessages(messages) {
-    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Master-Key": API_KEY
-        },
-        body: JSON.stringify({ messages })
-    });
-}
-
-// 渲染页面
-async function render() {
-    let list = await getMessages();
-    let html = "";
-    list.reverse().forEach(item => {
-        html += `
-        <div class="msg-item">
-            <div class="name">${item.name}</div>
-            <div class="content">${item.content}</div>
-            <div class="time">${item.time}</div>
-        </div>`;
-    });
-    document.getElementById("msgList").innerHTML = html;
-}
-
-// 提交留言
+// 提交留言（创建Issue）
 async function submitMsg() {
-    let name = document.getElementById("name").value.trim();
-    let content = document.getElementById("content").value.trim();
-    
+    const name = document.getElementById("name").value.trim();
+    const content = document.getElementById("content").value.trim();
+
     if (!name || !content) {
         alert("昵称和内容不能为空！");
         return;
     }
 
-    let time = new Date().toLocaleString();
-    let msg = { name, content, time };
+    // 跳转到GitHub提交留言（安全、官方、无报错）
+    window.open(`https://github.com/${USER_NAME}/${REPO_NAME}/issues/new?title=${encodeURIComponent(name)}&body=${encodeURIComponent(content)}`, "_blank");
     
-    let messages = await getMessages();
-    messages.push(msg);
-    await saveMessages(messages);
-    
-    alert("提交成功！所有人都能看到啦");
+    alert("跳转成功！提交后刷新页面即可看到留言~");
     document.getElementById("name").value = "";
     document.getElementById("content").value = "";
-    render();
 }
 
-window.onload = render;
+// 渲染留言
+async function renderMsgs() {
+    const msgs = await getMessages();
+    let html = "";
+    msgs.forEach(msg => {
+        html += `
+        <div class="msg-item">
+            <div class="name">${msg.name}</div>
+            <div class="content">${msg.content}</div>
+            <div class="time">${msg.time}</div>
+        </div>`;
+    });
+    document.getElementById("msgList").innerHTML = html;
+}
+
+window.onload = renderMsgs;
 </script>
 </body>
 </html>
