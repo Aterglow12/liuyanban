@@ -3,156 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>公共留言板（云端服务器版）</title>
+    <title>毕业快乐小朱老师</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Microsoft Yahei", sans-serif;
         }
+
         body {
-            background: #f8f9fa;
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 0 20px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #e8f4ff 0%, #fff9e8 100%);
+            padding: 40px 15px;
         }
-        .box {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
         }
-        h1 {
+
+        .top-title {
             text-align: center;
-            color: #2c3e50;
-            margin-bottom: 25px;
+            margin-bottom: 40px;
         }
-        input, textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 15px;
+
+        .top-title h1 {
+            font-family: "Microsoft YaHei", sans-serif;
+            color: #000000;
+            font-size: 40px;
+            letter-spacing: 2px;
         }
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
+
+        .top-title p {
+            color: #666;
             margin-top: 10px;
+            font-size: 16px;
+            font-family: "Microsoft YaHei", sans-serif;
         }
-        button:hover {
-            background: #0056b3;
+
+        .line {
+            width: 120px;
+            height: 3px;
+            background: #f6b947;
+            margin: 15px auto;
+            border-radius: 2px;
         }
-        .msg {
-            margin-top: 30px;
+
+        .msg-card {
+            background: #ffffff;
+            border-left: 5px solid #f6b947;
+            border-radius: 10px;
+            padding: 40px;
+            margin-bottom: 18px;
+            box-shadow: 0 3px 10px rgba(44, 82, 130, 0.12);
+            transition: all 0.3s ease;
         }
-        .item {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
+
+        .msg-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(44, 82, 130, 0.18);
         }
-        .name {
-            font-weight: bold;
-            color: #007bff;
-            margin-bottom: 5px;
-        }
-        .content {
+
+        /* 正常字体 + 统一字间距、行间距 */
+        .msg-text {
+            font-family: "Microsoft YaHei", "SimSun", sans-serif;
+            font-size: 17px;
+            line-height: 1.8;
+            letter-spacing: 0.3px;
             color: #333;
-            line-height: 1.5;
+            white-space: pre-line;
         }
-        .time {
-            font-size: 12px;
-            color: #999;
-            margin-top: 5px;
+
+        .msg-author {
+            margin-top: 30px;
+            text-align: right;
+            font-size: 16px;
+            color: #555;
+            font-family: "Microsoft YaHei", "SimSun", sans-serif;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            color: #777;
+            font-size: 15px;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        @keyframes float {
+            0% {transform: translateY(0) rotate(0deg); opacity: 0.8;}
+            100% {transform: translateY(100vh) rotate(360deg); opacity: 0;}
+        }
+        .deco {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: #f6b947;
+            border-radius: 2px;
+            animation: float 12s linear infinite;
+            z-index: -1;
         }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h1>公共留言板</h1>
-        <input id="name" placeholder="请输入昵称">
-        <textarea id="content" placeholder="请输入留言内容"></textarea>
-        <button onclick="send()">提交留言</button>
+    <div class="deco" style="left:10%;top:-20px;animation-delay:0s;"></div>
+    <div class="deco" style="left:30%;top:-20px;animation-delay:2s;"></div>
+    <div class="deco" style="left:60%;top:-20px;animation-delay:4s;"></div>
+    <div class="deco" style="left:85%;top:-20px;animation-delay:6s;"></div>
 
-        <div class="msg" id="list"></div>
+    <div class="container">
+        <div class="top-title">
+            <h1>毕业快乐呀小朱老师</h1>
+            <div class="line"></div>
+            <p>春祺夏安</p>
+        </div>
+
+        <div id="list"></div>
+
+        <div class="footer">
+            秋绥冬禧
+        </div>
     </div>
 
-<script>
-// ========================
-// 我已为你连接好云端服务器！
-// 无需修改任何代码！
-// ========================
-const BIN = "67a1d2f3acd48e77759d1cc0";
-const KEY = "$2b$10$UJz9n1V5Xf8Q0Z8e9x7Lwu";
+    <script>
+        const messages = [
+            // 第一封：原长信
+            {
+                content: `祝小猪宝宝，毕业快乐吖！祝前路浩浩荡荡，万事尽可期待，未来闪闪发光！
+ps:真挚的心意都是浓缩的`,
+                author: "万00" // 把这里改成对方的署名即可
+            },
+            {
+               content: `猪猪以后天天开心，吃好喝好睡好`,
+               author: "鹅鹅"
+            }, 
 
-// 从服务器加载留言
-async function load() {
-    let res = await fetch("https://api.jsonbin.io/v3/b/"+BIN+"/latest");
-    let data = await res.json();
-    let arr = data.record.msg || [];
-    
-    let html = "";
-    arr.reverse().forEach(item => {
-        html += `
-        <div class="item">
-            <div class="name">${item.name}</div>
-            <div class="content">${item.content}</div>
-            <div class="time">${item.time}</div>
-        </div>`;
-    });
-    document.getElementById("list").innerHTML = html;
+            {
+                content: `我亲爱的朋友：
+
+见字如晤，展信舒颜。
+
+    请别介意我用了这么老套的开头哈哈，高中毕业之后，真的很少有机会静下心来写点东西了，索性借着这次机会，小小文艺一下嘿嘿。首先，衷心祝愿小朱老师毕业快乐！！！作为好朋友看到毕业那天星光熠熠，闪闪发光的你，真的替你感到开心，能为你定格下那些闪光的瞬间，是我的荣幸，也希望你能够在之后的每一天里都能像那天一样在自己热爱的领域自在发光，步履不停。
+
+    尽管我们都知道未来可能并不会像期待的那样一帆风顺，但是我希望你过的平安开心，轻松简单。少经受挫折和磨难，不经受挫折和磨难更好哈哈。
+
+    其实提笔写这封信的念头酝酿了许久，今天下午在图书馆偷懒的时候终于是让我等到这个机会了哈哈，那是一个关于朋友跟挚友的视频，视频里说朋友是流动的，而挚友不是。我坚信这一点，我觉得这世间的相遇绝非偶然，而是灵魂间的同频共振。我一直都很庆幸认识你还有他们，因此在朋友这件事情上我从来不羡慕任何人，因为你们都是顶好的人，讲真的，你们在我身边，无论是嬉笑打闹还是随口闲谈我都很有安全感，那种放松舒服的感觉不会骗人。
+
+    眨眼间我们都到了要出去闯荡的时候，成年人的生活里，总会有那种自己一个人实在熬不过去的瞬间，被烂情绪憋的喘不过气的时候，虽然说我可能做不到和她们一样能听你的碎碎念，但只要你需要，我定会全力以赴，简单点来说就是：没事多联系，有事就更要联系。
+
+    我们都在努力的成为独挡一面的大人，但是有时候回过头来，当当小孩也是不错的，不用害怕，有我们在给你兜底，同时也别怕麻烦，就因为是朋友，所以才可以互相麻烦，退一步讲，我将来肯定也会遇到什么事，到时候也会麻烦你的，你们都是我亲手选的没有亲缘关系的亲人，所以只管大大方方的麻烦我，开开心心的找我玩，以后我们可能走向不同的路也可能会不经常见面，离别是常有的事，但离别并不意味着情感的终结，时间会让我们之间的情谊更加深厚。山前即相见，山后再相逢，每一次离别都是为了下一次相聚。
+
+    于我而言，挚友寥寥，却个个真心，每一个都很重要，每一个都要幸福。
+
+所以我亲爱的挚友，大胆往前走，我们一直都在。
+纸短情长，词不达意，愿来日方长，愿我们永远都有下次再见。`,
+                author: "曾🐟飞"
+            },
+            {
+    content: `老猪老猪，俺是老鸭！
+
+一转眼见证了你的十四岁到二十二岁，好幸运也好幸福！一个小小的猪变成了一个大大的猪，依然记得first look干净利落短发霸道姐在讲台上管着纪律，好飒！一转眼这个画面竟然就这样悄悄过去了八年，我们也相识了八年，想来还是非常有幸能够参与我猪二分之一的学生时代！小小一段话怎么要打我半个小时，好奇怪，明明有很多话想说，但是手放在键盘上不知道为什么眼前总是糊糊的，像打上一层马赛克！
+
+那天参加你的毕业典礼，看着你在这么多领导面前侃侃而谈，整个人都在闪闪发光，我觉得你棒极了，好骄傲啊有你这样一个朋友！我的朋友老猪比我想象中的更勇敢更有才更有独当一面的能力，我不知道这成长的过程你吃了多少苦，上了大学你和我说的越来越少了，不知道你是不是在一个人硬撑，我不敢问，我在想小猪是在一个人偷偷成长还是有了新的朋友，我不敢问，我在想如果你需要我，你会来找我，你也知道，只要你来找我，我也一定会在，或许这就够了！看到那天你侃侃而谈的样子让我想到了你高三集训的时候，那真是脆弱的小猪和小鸭，守着宿舍楼的座机期待小猪的来电，期待小猪和小鸭分享不一样的集训生活，直到有一天，小猪打电话的声音是哽咽的，你说你好累，为什么自己写不好字，一边哭一边说，那时候我也好自责，怎么会是我告诉你书法艺术生，如果当时我没有告诉你这件事，是不是你就不用吃这么多苦了，但是在毕业那天，闪闪发光的小朱老师，给了四年前的我一个回应，小朱老师在自己擅长的领域闪闪发光了，不必再自责了！幸好幸好！我的小猪很棒！
+今天的小猪很棒！
+
+希望未来的中猪老猪越来越好！生活顺遂！平安健康！还有！我们的友谊坚如磐石！`,
+    author: "鸭鸭"
+},    
+            {
+    content: `亲爱的小朱
+  见字如面，在凌晨十二点，我在屏幕前打下了第一个字，首先呢，祝你毕业快乐，在往后的日子里万事顺意。有时候我真的觉得缘分不是一场不出门就能避开的雨，我和你的认识还算是巧合，在共友朋友圈的一句评论，让我们从相识到相知，到后面的无话不说，我们成为了很好的朋友，一眨眼四年过去了，是完完整整的四年，认识你很高兴，感谢你在我大学生涯留下浓重的一笔，很抱歉你的毕业照我没能去参加，但是在朋友圈看到你的照片，由衷的为你感到高兴，原来你一直都是那个闪闪发光的小朱，是我心目中的大书法家，即使我们的联系没有以前频繁了，但是我相信我们再见面时依旧是彼此非常熟悉的好朋友，无论未来如何，请你一定要坚定的走向幸福，无论新的故事里有没有我，我都希望你快乐，祝你一切都好，在数不尽的明天，人生总是柳暗花明，但我更希望你，永远都是春和景明`,
+    author: "邓骏业"
 }
 
-// 提交留言到服务器
-async function send() {
-    let name = document.getElementById("name").value.trim();
-    let content = document.getElementById("content").value.trim();
-    
-    if(!name || !content){
-        alert("昵称和内容不能为空！");
-        return;
-    }
 
-    // 从服务器获取现有留言
-    let res = await fetch("https://api.jsonbin.io/v3/b/"+BIN+"/latest");
-    let data = await res.json();
-    let msg = data.record.msg || [];
 
-    // 添加新留言
-    msg.push({
-        name: name,
-        content: content,
-        time: new Date().toLocaleString()
-    });
 
-    // 保存回服务器
-    await fetch("https://api.jsonbin.io/v3/b/"+BIN, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Master-Key": KEY
-        },
-        body: JSON.stringify({ msg: msg })
-    });
 
-    alert("提交成功！");
-    document.getElementById("name").value = "";
-    document.getElementById("content").value = "";
-    load(); // 刷新显示
-}
 
-// 打开网页自动加载服务器留言
-window.onload = load;
-</script>
+];
+        
+        const list = document.getElementById("list");
+        messages.forEach(item => {
+            const card = document.createElement("div");
+            card.className = "msg-card";
+            card.innerHTML = `
+                <div class="msg-text">${item.content}</div>
+                <div class="msg-author">—— ${item.author}</div>
+            `;
+            list.appendChild(card);
+        });
+    </script>
 </body>
 </html>
